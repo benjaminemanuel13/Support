@@ -1,0 +1,199 @@
+@page "/admin"
+@using Support.Data
+@using Support.Services
+@inject SupportService SupportService
+@rendermode InteractiveServer
+
+<PageTitle>Support Admin</PageTitle>
+
+<h1>Support Administration</h1>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h2>Support Areas</h2>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Areas != null)
+                {
+                    @foreach (var area in Areas)
+                    {
+                        <tr>
+                            <td>@area.Name</td>
+                            <td>@area.Description</td>
+                            <td>
+                                <button class="btn-danger" @onclick="() => DeleteArea(area.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <div class="mt-3 p-3" style="background: var(--bg-tertiary); border-radius: 8px;">
+            <h4>Add New Area</h4>
+            <input class="form-control" placeholder="Name" @bind="NewArea.Name" />
+            <input class="form-control" placeholder="Description" @bind="NewArea.Description" />
+            <button class="btn-primary" @onclick="CreateArea">Add Area</button>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h2>Specific Issues</h2>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+             <label>Filter by Area:</label>
+             <select class="form-control" @onchange="OnAdminAreaFilterChanged">
+                <option value="">-- All Areas --</option>
+                @if (Areas != null)
+                {
+                    foreach(var area in Areas)
+                    {
+                        <option value="@area.Id">@area.Name</option>
+                    }
+                }
+             </select>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Area</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                     <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (FilteredIssues != null)
+                {
+                    @foreach (var issue in FilteredIssues)
+                    {
+                        <tr>
+                            <td>@(Areas?.FirstOrDefault(a => a.Id == issue.SupportAreaId)?.Name ?? issue.SupportAreaId.ToString())</td>
+                            <td>@issue.Name</td>
+                            <td>@issue.Description</td>
+                             <td>
+                                <button class="btn-danger" @onclick="() => DeleteIssue(issue.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+         <div class="mt-3 p-3" style="background: var(--bg-tertiary); border-radius: 8px;">
+            <h4>Add New Issue</h4>
+             <select class="form-control" @bind="NewIssue.SupportAreaId">
+                <option value="0">-- Select Area --</option>
+                @if (Areas != null)
+                {
+                    foreach(var area in Areas)
+                    {
+                        <option value="@area.Id">@area.Name</option>
+                    }
+                }
+             </select>
+            <input class="form-control" placeholder="Name" @bind="NewIssue.Name" />
+            <input class="form-control" placeholder="Description" @bind="NewIssue.Description" />
+            <button class="btn-primary" @onclick="CreateIssue">Add Issue</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<SupportArea>? Areas;
+    private List<SpecificIssue>? AllIssues;
+    private List<SpecificIssue>? FilteredIssues;
+    
+    private SupportArea NewArea = new SupportArea { Name = "", Description = "" };
+    private SpecificIssue NewIssue = new SpecificIssue { Name = "", Description = "" };
+
+    private int? SelectedFilterAreaId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Areas = await SupportService.GetSupportAreasAsync();
+        // Ideally we would have a GetAllIssues method, but for now we fetch by area or implement a GetAll in service
+        // For simplicity in this demo, I'll fetch all by iterating (not efficient for large data, but fine for demo)
+        AllIssues = new List<SpecificIssue>();
+        foreach(var area in Areas)
+        {
+            var issues = await SupportService.GetIssuesByAreaAsync(area.Id);
+            AllIssues.AddRange(issues);
+        }
+        FilterIssues();
+    }
+
+    private void OnAdminAreaFilterChanged(ChangeEventArgs e)
+    {
+         if (int.TryParse(e.Value?.ToString(), out int areaId))
+        {
+            SelectedFilterAreaId = areaId;
+        }
+        else
+        {
+            SelectedFilterAreaId = null;
+        }
+        FilterIssues();
+    }
+
+    private void FilterIssues()
+    {
+        if (SelectedFilterAreaId.HasValue)
+        {
+            FilteredIssues = AllIssues?.Where(i => i.SupportAreaId == SelectedFilterAreaId.Value).ToList();
+        }
+        else
+        {
+            FilteredIssues = AllIssues?.ToList();
+        }
+    }
+
+    private async Task CreateArea()
+    {
+        if (!string.IsNullOrWhiteSpace(NewArea.Name))
+        {
+            await SupportService.AddSupportAreaAsync(NewArea);
+            NewArea = new SupportArea { Name = "", Description = "" };
+            await LoadData();
+        }
+    }
+
+    private async Task DeleteArea(int id)
+    {
+        await SupportService.DeleteSupportAreaAsync(id);
+        await LoadData();
+    }
+
+    private async Task CreateIssue()
+    {
+        if (NewIssue.SupportAreaId != 0 && !string.IsNullOrWhiteSpace(NewIssue.Name))
+        {
+            await SupportService.AddSpecificIssueAsync(NewIssue);
+            NewIssue = new SpecificIssue { Name = "", Description = "" };
+            await LoadData();
+        }
+    }
+
+    private async Task DeleteIssue(int id)
+    {
+        await SupportService.DeleteSpecificIssueAsync(id);
+        await LoadData();
+    }
+}

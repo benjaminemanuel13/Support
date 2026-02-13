@@ -1,0 +1,269 @@
+@page "/"
+@using Support.Data
+@using Support.Services
+@inject SupportService SupportService
+@inject IAiSupportService AiService
+@rendermode InteractiveServer
+
+<PageTitle>Support Query</PageTitle>
+
+<div class="card">
+    <div class="card-header">
+        <h3>How can we help you?</h3>
+    </div>
+    <div class="card-body">
+        
+        @if (!AiService.IsConfigured)
+        {
+            <div class="alert alert-warning">
+                <strong>AI Not Configured:</strong> Please set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY environment variables to use AI features.
+            </div>
+        }
+
+        <div class="mb-4">
+            <label>Describe your problem:</label>
+            <div class="input-group">
+                <input class="form-control" placeholder="e.g. My screen turned blue" @bind="UserQuery" @bind:event="oninput" @onkeyup="HandleKeyUp" />
+                <button class="btn btn-primary" @onclick="AskAi" disabled="@(!AiService.IsConfigured || IsLoading)">
+                    @if (IsLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span> Thinking...</span>
+                    }
+                    else
+                    {
+                        <span>Ask AI to Find Solution</span>
+                    }
+                </button>
+            </div>
+             @if (!string.IsNullOrEmpty(AiMessage))
+            {
+                <div class="alert alert-info mt-2">@AiMessage</div>
+            }
+        </div>
+
+        <hr />
+        
+        @if (AiFoundArea != null || AiFoundIssue != null)
+        {
+            <div class="card mb-3 border-info">
+                <div class="card-header bg-info text-white">AI Analysis Results</div>
+                <div class="card-body">
+                    @if (AiFoundArea != null)
+                    {
+                        <p><strong>Identified Area:</strong> @AiFoundArea.Name</p>
+                    }
+                    @if (AiFoundIssue != null)
+                    {
+                        <p><strong>Identified Issue:</strong> @AiFoundIssue.Name</p>
+                    }
+                </div>
+            </div>
+        }
+
+        <p class="text-secondary">Or select manually:</p>
+
+        @if (Areas == null)
+        {
+            <p>Loading support areas...</p>
+        }
+        else
+        {
+            <div class="mb-3">
+                <label>Select Support Area:</label>
+                <select class="form-control" value="@SelectedAreaId" @onchange="OnAreaChanged">
+                    <option value="">-- Select Area --</option>
+                    @foreach (var area in Areas)
+                    {
+                        <option value="@area.Id">@area.Name</option>
+                    }
+                </select>
+            </div>
+        }
+
+        @if (SelectedAreaId.HasValue && Issues != null)
+        {
+            <div class="mb-3">
+                <label>Identify your Specific Issue:</label>
+                <select class="form-control" value="@SelectedIssueId" @onchange="OnIssueChanged">
+                    <option value="">-- Select Issue --</option>
+                    @foreach (var issue in Issues)
+                    {
+                        <option value="@issue.Id">@issue.Name</option>
+                    }
+                </select>
+            </div>
+        }
+
+        @if (Solutions != null && Solutions.Any())
+        {
+            <div class="mt-4">
+                <h4>Suggested Solutions</h4>
+                @foreach (var solution in Solutions)
+                {
+                    <div class="card mt-2" style="border-color: var(--success-color);">
+                        <div class="card-header text-success">
+                            @solution.Name
+                        </div>
+                        <div class="card-body">
+                            <p>@solution.Description</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else if (SelectedIssueId.HasValue && Solutions != null && !Solutions.Any())
+        {
+             <div class="alert alert-info mt-3">No specific solutions found for this issue. Please contact support.</div>
+        }
+    </div>
+</div>
+
+<style>
+    .input-group {
+        display: flex;
+        gap: 10px;
+    }
+    .input-group .form-control {
+        margin-bottom: 0;
+    }
+</style>
+
+@code {
+    private List<SupportArea>? Areas;
+    private List<SpecificIssue>? Issues;
+    private List<Solution>? Solutions;
+
+    private int? SelectedAreaId;
+    private int? SelectedIssueId;
+    
+    private string UserQuery = "";
+    private bool IsLoading = false;
+    private string AiMessage = "";
+    
+    // Explicit AI Results for display
+    private SupportArea? AiFoundArea;
+    private SpecificIssue? AiFoundIssue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Areas = await SupportService.GetSupportAreasAsync();
+    }
+
+    private async Task OnAreaChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int areaId))
+        {
+            await SelectArea(areaId);
+        }
+        else
+        {
+            ResetSelection();
+        }
+    }
+    
+    private async Task SelectArea(int areaId)
+    {
+        SelectedAreaId = areaId;
+        SelectedIssueId = null;
+        Solutions = null;
+        Issues = await SupportService.GetIssuesByAreaAsync(areaId);
+        
+        // Clear AI results if manual selection mismatch (optional, keeping simple for now)
+    }
+
+    private async Task OnIssueChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int issueId))
+        {
+            await SelectIssue(issueId);
+        }
+        else
+        {
+             SelectedIssueId = null;
+             Solutions = null;
+        }
+    }
+
+    private async Task SelectIssue(int issueId)
+    {
+        SelectedIssueId = issueId;
+        Solutions = await SupportService.GetSolutionsByIssueAsync(issueId);
+    }
+
+    private void ResetSelection()
+    {
+        SelectedAreaId = null;
+        Issues = null;
+        Solutions = null;
+        SelectedIssueId = null;
+        AiFoundArea = null;
+        AiFoundIssue = null;
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await AskAi();
+        }
+    }
+
+    private async Task AskAi()
+    {
+        if (string.IsNullOrWhiteSpace(UserQuery) || Areas == null || !AiService.IsConfigured) return;
+
+        IsLoading = true;
+        AiMessage = "Analyzing your query...";
+        ResetSelection();
+        StateHasChanged(); 
+
+        try
+        {
+            // Step 1: Identify Area
+            var areaId = await AiService.IdentifySupportAreaIdAsync(UserQuery, Areas);
+            
+            if (areaId.HasValue && areaId != -1)
+            {
+                await SelectArea(areaId.Value);
+                AiFoundArea = Areas.FirstOrDefault(a => a.Id == areaId.Value);
+                
+                AiMessage = $"Identified Area: {AiFoundArea?.Name}. Checking for specific issues...";
+                StateHasChanged();
+
+                if (Issues != null && Issues.Any())
+                {
+                    // Step 2: Identify Issue within that Area
+                    var issueId = await AiService.IdentifySpecificIssueIdAsync(UserQuery, Issues);
+                    if (issueId.HasValue && issueId != -1)
+                    {
+                        await SelectIssue(issueId.Value);
+                        AiFoundIssue = Issues.FirstOrDefault(i => i.Id == issueId.Value);
+                        AiMessage = "Analysis Complete.";
+                    }
+                    else
+                    {
+                         AiMessage = "Could not identify a specific issue, please select one from the list.";
+                    }
+                }
+                else
+                {
+                    AiMessage = "No issues found for this area.";
+                }
+            }
+            else
+            {
+                AiMessage = "Could not identify a relevant support area. Please try a different query.";
+            }
+        }
+        catch (Exception ex)
+        {
+            AiMessage = $"Error: {ex.Message}";
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

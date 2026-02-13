@@ -1,0 +1,45 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <a href="/" class="nav-link">Support Query</a>
+            <a href="/admin" class="nav-link">Admin</a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+<style>
+    .top-row {
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        height: 3.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .top-row a {
+        margin-right: 1.5rem;
+        font-weight: bold;
+        color: var(--text-secondary);
+        text-decoration: none;
+    }
+
+    .top-row a:hover {
+        color: var(--accent-blue);
+    }
+</style>

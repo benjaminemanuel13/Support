@@ -18,4 +18,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Support.Common\Support.Common.csproj" />
+  </ItemGroup>
+
 </Project>

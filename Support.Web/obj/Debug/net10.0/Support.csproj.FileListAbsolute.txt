@@ -176,3 +176,5 @@ C:\Users\benja\source\Anti\Support\Support.Web\obj\Debug\net10.0\refint\Support.
 C:\Users\benja\source\Anti\Support\Support.Web\obj\Debug\net10.0\Support.pdb
 C:\Users\benja\source\Anti\Support\Support.Web\obj\Debug\net10.0\Support.genruntimeconfig.cache
 C:\Users\benja\source\Anti\Support\Support.Web\obj\Debug\net10.0\ref\Support.dll
+C:\Users\benja\source\Anti\Support\Support.Web\bin\Debug\net10.0\Support.Common.dll
+C:\Users\benja\source\Anti\Support\Support.Web\bin\Debug\net10.0\Support.Common.pdb

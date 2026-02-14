@@ -1121,6 +1121,16 @@
             "rid": "win"
           }
         }
+      },
+      "Support.Common/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/Support.Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Support.Common.dll": {}
+        }
       }
     }
   },
@@ -3214,6 +3224,11 @@
         "useSharedDesignerContext.txt",
         "version.txt"
       ]
+    },
+    "Support.Common/1.0.0": {
+      "type": "project",
+      "path": "../Support.Common/Support.Common.csproj",
+      "msbuildProject": "../Support.Common/Support.Common.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -3223,7 +3238,8 @@
       "Microsoft.Agents.AI.OpenAI >= 1.0.0-preview.260209.1",
       "Microsoft.AspNetCore.App.Internal.Assets >= 10.0.2",
       "Microsoft.EntityFrameworkCore.Sqlite >= 10.0.3",
-      "Microsoft.EntityFrameworkCore.Tools >= 10.0.3"
+      "Microsoft.EntityFrameworkCore.Tools >= 10.0.3",
+      "Support.Common >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -3258,7 +3274,11 @@
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\benja\\source\\Anti\\Support\\Support.Common\\Support.Common.csproj": {
+              "projectPath": "C:\\Users\\benja\\source\\Anti\\Support\\Support.Common\\Support.Common.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

@@ -1,0 +1,12 @@
+C:\Users\benja\source\Anti\Support\Support.Common\bin\Debug\net10.0\Support.Common.deps.json
+C:\Users\benja\source\Anti\Support\Support.Common\bin\Debug\net10.0\Support.Common.dll
+C:\Users\benja\source\Anti\Support\Support.Common\bin\Debug\net10.0\Support.Common.pdb
+C:\Users\benja\source\Anti\Support\Support.Common\obj\Debug\net10.0\Support.Common.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\benja\source\Anti\Support\Support.Common\obj\Debug\net10.0\Support.Common.AssemblyInfoInputs.cache
+C:\Users\benja\source\Anti\Support\Support.Common\obj\Debug\net10.0\Support.Common.AssemblyInfo.cs
+C:\Users\benja\source\Anti\Support\Support.Common\obj\Debug\net10.0\Support.Common.csproj.CoreCompileInputs.cache
+C:\Users\benja\source\Anti\Support\Support.Common\obj\Debug\net10.0\Support.Common.sourcelink.json
+C:\Users\benja\source\Anti\Support\Support.Common\obj\Debug\net10.0\Support.Common.dll
+C:\Users\benja\source\Anti\Support\Support.Common\obj\Debug\net10.0\refint\Support.Common.dll
+C:\Users\benja\source\Anti\Support\Support.Common\obj\Debug\net10.0\Support.Common.pdb
+C:\Users\benja\source\Anti\Support\Support.Common\obj\Debug\net10.0\ref\Support.Common.dll

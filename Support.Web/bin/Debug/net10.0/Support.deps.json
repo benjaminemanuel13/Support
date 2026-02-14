@@ -12,7 +12,8 @@
           "Azure.Identity": "1.17.1",
           "Microsoft.Agents.AI.OpenAI": "1.0.0-preview.260209.1",
           "Microsoft.EntityFrameworkCore.Sqlite": "10.0.3",
-          "Microsoft.EntityFrameworkCore.Tools": "10.0.3"
+          "Microsoft.EntityFrameworkCore.Tools": "10.0.3",
+          "Support.Common": "1.0.0"
         },
         "runtime": {
           "Support.dll": {}
@@ -861,6 +862,14 @@
             "fileVersion": "4.6.26515.6"
           }
         }
+      },
+      "Support.Common/1.0.0": {
+        "runtime": {
+          "Support.Common.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
       }
     }
   },
@@ -1212,6 +1221,11 @@
       "sha512": "sha512-wLBKzFnDCxP12VL9ANydSYhk59fC4cvOr9ypYQLPnAj48NQIhqnjdD2yhP8yEKyBJEjERWS9DisKL7rX5eU25Q==",
       "path": "system.security.cryptography.protecteddata/4.5.0",
       "hashPath": "system.security.cryptography.protecteddata.4.5.0.nupkg.sha512"
+    },
+    "Support.Common/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     }
   }
 }

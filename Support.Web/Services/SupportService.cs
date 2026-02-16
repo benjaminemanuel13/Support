@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Support.Data;
+using System.Net.Sockets;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Support.Services;
 
@@ -34,9 +38,41 @@ public class SupportService
 
     public async Task<List<Solution>> GetSolutionsByIssueAsync(int issueId)
     {
-        return await _context.Solutions
+        var solutions = await _context.Solutions
             .Where(s => s.SpecificIssueId == issueId)
             .ToListAsync();
+
+        foreach (var solution in solutions)
+        {
+            if (solution.Request != null)
+            {
+                var request = await _context.PlayWrightRequests
+                    .Include(r => r.WebTasks)
+                    .FirstOrDefaultAsync(r => r.Id == solution.Request);
+
+                if (request != null)
+                {
+                    try
+                    {
+                        var json = JsonSerializer.Serialize(request, new JsonSerializerOptions 
+                        { 
+                            ReferenceHandler = ReferenceHandler.IgnoreCycles
+                        });
+                        using var client = new TcpClient();
+                        await client.ConnectAsync("127.0.0.1", 13000);
+                        using var stream = client.GetStream();
+                        var data = Encoding.UTF8.GetBytes(json + "\r\n");
+                        await stream.WriteAsync(data, 0, data.Length);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error sending TCP data: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        return solutions;
     }
 
     // Admin CRUD Methods - Support Areas

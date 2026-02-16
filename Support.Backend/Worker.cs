@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Text.Json;
 using Microsoft.CognitiveServices.Speech;
+using Microsoft.Playwright;
+using Support.Common.Models;
 
 namespace Support.Backend;
 
@@ -38,10 +41,11 @@ public class Worker : BackgroundService
                     using var stream = client.GetStream();
                     using var reader = new StreamReader(stream);
                     
+
                     string? data = await reader.ReadLineAsync(stoppingToken);
                     if (data != null)
                     {
-                        ProcessReceivedData(data);
+                        await ProcessReceivedData(data);
                     }
                 }
                 catch (Exception ex)
@@ -56,10 +60,55 @@ public class Worker : BackgroundService
         Listener.Stop();
     }
 
-    private void ProcessReceivedData(string data)
+    private async Task ProcessReceivedData(string data)
     {
-        // Placeholder for processing logic
-        _ = SpeakAsync($"Received data: {data}");
+        try 
+        {
+            var request = JsonSerializer.Deserialize<PlayWrightRequest>(data);
+            if (request != null && !string.IsNullOrEmpty(request.Url) && request.WebTasks != null)
+            {
+                using var playwright = await Playwright.CreateAsync();
+                await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = false, SlowMo = 1000 });
+                var page = await browser.NewPageAsync();
+                await page.GotoAsync(request.Url);
+                await page.BringToFrontAsync();
+
+                foreach (var task in request.WebTasks)
+                {
+                    if (!string.IsNullOrEmpty(task.SpeechText))
+                    {
+                        await SpeakAsync(task.SpeechText);
+                        await Task.Delay(2000);
+                    }
+
+                    if (!string.IsNullOrEmpty(task.ElementId))
+                    {
+                        await page.Locator($"#{task.ElementId}").ClickAsync();
+                        // Wait for potential navigation or network idle after click
+                        try 
+                        {
+                            await page.WaitForLoadStateAsync(LoadState.NetworkIdle, new PageWaitForLoadStateOptions { Timeout = 5000 });
+                        }
+                        catch (TimeoutException) 
+                        {
+                            // Continue if no navigation occurs within timeout
+                        }
+                    }
+                }
+                
+                // Keep browser open for a moment to see final state? User didn't specify closing.
+                // But for a worker, we should probably close it to avoid resource leaks.
+                // Assuming "continue loop" means proceed to next task.
+                // I'll close it at the end of the request processing.
+                // I'll close it at the end of the request processing.
+                await Task.Delay(10000); // 10 second delay to see final result
+                await browser.CloseAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing data");
+        }
     }
 
     public async Task SpeakAsync(string text)

@@ -9,10 +9,8 @@ public static class SeedData
         using var context = new SupportContext(
             serviceProvider.GetRequiredService<DbContextOptions<SupportContext>>());
 
-        if (context.SupportAreas.Any())
+        if (!context.SupportAreas.Any())
         {
-            return;   // DB has been seeded
-        }
 
         var supportAreas = new List<SupportArea>
         {
@@ -92,4 +90,63 @@ public static class SeedData
         }
         context.SaveChanges();
     }
+
+
+        // Seed Nimbus System and related data
+        if (!context.SupportAreas.Any(a => a.Name == "Nimbus System"))
+        {
+            var nimbusArea = new SupportArea 
+            { 
+                Name = "Nimbus System", 
+                Description = "A computer system used by the people working with us, it is an internal system" 
+            };
+            context.SupportAreas.Add(nimbusArea);
+            context.SaveChanges();
+
+            // Create PlayWrightRequest
+            var playWrightRequest = new Support.Common.Models.PlayWrightRequest
+            {
+                Url = "http://localhost:8010/",
+                WebTasks = new List<Support.Common.Models.WebTask>
+                {
+                    new Support.Common.Models.WebTask
+                    {
+                        ActionType = Support.Common.Models.WebTaskType.Click,
+                        ElementId = "coloured",
+                        SpeechText = "The first thing we do is click on 'Coloured Boxes'"
+                    },
+                    new Support.Common.Models.WebTask
+                    {
+                        ActionType = Support.Common.Models.WebTaskType.Click, 
+                        ElementId = "green",
+                        SpeechText = "Now we are going to click on the green box."
+                    }
+                }
+            };
+            context.PlayWrightRequests.Add(playWrightRequest);
+            context.SaveChanges();
+
+            // Create Specific Issue
+            var greenBoxIssue = new SpecificIssue 
+            { 
+                SupportAreaId = nimbusArea.Id, 
+                Name = "Green Box", 
+                Description = "The user wants to click the Green box but doesn't know how to" 
+            };
+            context.SpecificIssues.Add(greenBoxIssue);
+            context.SaveChanges();
+
+            // Create Solution
+            var greenBoxSolution = new Solution
+            {
+                SpecificIssueId = greenBoxIssue.Id,
+                Name = "Click on Green Box",
+                Description = "You will be shown how to click on the Green Box",
+                Request = playWrightRequest.Id
+            };
+            context.Solutions.Add(greenBoxSolution);
+            context.SaveChanges();
+        }
+    }
 }
+

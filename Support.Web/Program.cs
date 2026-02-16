@@ -29,6 +29,8 @@ using (var scope = app.Services.CreateScope())
     context.Database.EnsureCreated();
     SeedData.Initialize(services);
 }
+    
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

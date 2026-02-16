@@ -37,4 +37,6 @@ public class Solution
 
     [ForeignKey(nameof(SpecificIssueId))]
     public SpecificIssue? SpecificIssue { get; set; }
+
+    public int? Request { get; set; }
 }
